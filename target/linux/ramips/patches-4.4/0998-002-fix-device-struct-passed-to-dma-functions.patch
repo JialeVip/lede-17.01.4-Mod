@@ -1,5 +1,3 @@
-diff --git a/drivers/net/ethernet/mediatek/mtk_eth_soc.c b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
-index 7da348a8..c8c2644d 100644
 --- a/drivers/net/ethernet/mediatek/mtk_eth_soc.c
 +++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
 @@ -213,7 +213,7 @@ static void fe_clean_rx(struct fe_priv *priv)
@@ -90,7 +88,7 @@ index 7da348a8..c8c2644d 100644
  
  		ptxd->txd2 = TX_DMA_DESP2_DEF;
  		j = NEXT_TX_DESP_IDX(j);
-@@ -855,11 +854,11 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
+@@ -857,11 +856,11 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
  			stats->rx_dropped++;
  			goto release_desc;
  		}
@@ -104,7 +102,7 @@ index 7da348a8..c8c2644d 100644
  			skb_free_frag(new_data);
  			goto release_desc;
  		}
-@@ -872,7 +871,7 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
+@@ -874,7 +873,7 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
  		}
  		skb_reserve(skb, NET_SKB_PAD + NET_IP_ALIGN);
  
@@ -113,7 +111,7 @@ index 7da348a8..c8c2644d 100644
  				 ring->rx_buf_size, DMA_FROM_DEVICE);
  		pktlen = RX_DMA_GET_PLEN0(trxd.rxd2);
  		skb->dev = netdev;
-@@ -916,7 +915,6 @@ static int fe_poll_tx(struct fe_priv *priv, int budget, u32 tx_intr,
+@@ -918,7 +917,6 @@ static int fe_poll_tx(struct fe_priv *priv, int budget, u32 tx_intr,
  		      int *tx_again)
  {
  	struct net_device *netdev = priv->netdev;
@@ -121,7 +119,7 @@ index 7da348a8..c8c2644d 100644
  	unsigned int bytes_compl = 0;
  	struct sk_buff *skb;
  	struct fe_tx_buf *tx_buf;
-@@ -939,7 +937,7 @@ static int fe_poll_tx(struct fe_priv *priv, int budget, u32 tx_intr,
+@@ -943,7 +941,7 @@ static int fe_poll_tx(struct fe_priv *priv, int budget, u32 tx_intr,
  			done++;
  			budget--;
  		}

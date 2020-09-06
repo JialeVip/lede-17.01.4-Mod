@@ -1,5 +1,3 @@
-diff --git a/drivers/net/ethernet/mediatek/esw_rt3050.c b/drivers/net/ethernet/mediatek/esw_rt3050.c
-index 6cad5856..816c588d 100644
 --- a/drivers/net/ethernet/mediatek/esw_rt3050.c
 +++ b/drivers/net/ethernet/mediatek/esw_rt3050.c
 @@ -1358,8 +1358,8 @@ static int esw_probe(struct platform_device *pdev)
@@ -13,8 +11,6 @@ index 6cad5856..816c588d 100644
  
  	port_map = of_get_property(np, "mediatek,portmap", NULL);
  	if (port_map)
-diff --git a/drivers/net/ethernet/mediatek/gsw_mt7620.c b/drivers/net/ethernet/mediatek/gsw_mt7620.c
-index b675ad0c..a4602c45 100644
 --- a/drivers/net/ethernet/mediatek/gsw_mt7620.c
 +++ b/drivers/net/ethernet/mediatek/gsw_mt7620.c
 @@ -166,6 +166,7 @@ static void mt7620_hw_init(struct mt7620_gsw *gsw, struct device_node *np)
@@ -36,8 +32,6 @@ index b675ad0c..a4602c45 100644
  
  	gsw->dev = &pdev->dev;
  
-diff --git a/drivers/net/ethernet/mediatek/gsw_mt7621.c b/drivers/net/ethernet/mediatek/gsw_mt7621.c
-index a903ccbe..ac1d36a9 100644
 --- a/drivers/net/ethernet/mediatek/gsw_mt7621.c
 +++ b/drivers/net/ethernet/mediatek/gsw_mt7621.c
 @@ -41,6 +41,7 @@ static irqreturn_t gsw_interrupt_mt7621(int irq, void *_priv)
@@ -152,8 +146,6 @@ index a903ccbe..ac1d36a9 100644
  	gsw->irq = platform_get_irq(pdev, 0);
  
  	platform_set_drvdata(pdev, gsw);
-diff --git a/drivers/net/ethernet/mediatek/mdio.c b/drivers/net/ethernet/mediatek/mdio.c
-index 7cfbd8a0..9eff148a 100644
 --- a/drivers/net/ethernet/mediatek/mdio.c
 +++ b/drivers/net/ethernet/mediatek/mdio.c
 @@ -57,6 +57,7 @@ static void fe_phy_link_adjust(struct net_device *dev)
@@ -183,8 +175,6 @@ index 7cfbd8a0..9eff148a 100644
  	phy->advertising = phy->supported | ADVERTISED_Autoneg;
  
  	phy_start_aneg(phy);
-diff --git a/drivers/net/ethernet/mediatek/mtk_eth_soc.c b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
-index 8c71a92f..7da348a8 100644
 --- a/drivers/net/ethernet/mediatek/mtk_eth_soc.c
 +++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.c
 @@ -205,8 +205,9 @@ static inline void fe_set_txd(struct fe_tx_dma *txd, struct fe_tx_dma *dma_txd)
@@ -265,7 +255,16 @@ index 8c71a92f..7da348a8 100644
  	if (fe_skb_padto(skb, priv)) {
  		netif_warn(priv, tx_err, dev, "tx padding failed!\n");
  		return NETDEV_TX_OK;
-@@ -834,7 +849,8 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
+@@ -811,6 +826,8 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
+ 	struct fe_rx_dma *rxd, trxd;
+ 	int done = 0, pad;
+ 
++	fe_reg_w32(rx_intr, FE_REG_FE_INT_STATUS);
++
+ 	if (netdev->features & NETIF_F_RXCSUM)
+ 		checksum_bit = soc->checksum_bit;
+ 	else
+@@ -834,7 +851,8 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
  			break;
  
  		/* alloc new buffer */
@@ -275,7 +274,7 @@ index 8c71a92f..7da348a8 100644
  		if (unlikely(!new_data)) {
  			stats->rx_dropped++;
  			goto release_desc;
-@@ -844,14 +860,14 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
+@@ -844,14 +862,14 @@ static int fe_poll_rx(struct napi_struct *napi, int budget,
  					  ring->rx_buf_size,
  					  DMA_FROM_DEVICE);
  		if (unlikely(dma_mapping_error(&netdev->dev, dma_addr))) {
@@ -292,7 +291,7 @@ index 8c71a92f..7da348a8 100644
  			goto release_desc;
  		}
  		skb_reserve(skb, NET_SKB_PAD + NET_IP_ALIGN);
-@@ -882,17 +898,17 @@ release_desc:
+@@ -882,17 +900,17 @@ release_desc:
  			rxd->rxd2 = RX_DMA_LSO;
  
  		ring->rx_calc_idx = idx;
@@ -314,7 +313,16 @@ index 8c71a92f..7da348a8 100644
  	return done;
  }
  
-@@ -928,14 +944,7 @@ static int fe_poll_tx(struct fe_priv *priv, int budget, u32 tx_intr,
+@@ -908,6 +926,8 @@ static int fe_poll_tx(struct fe_priv *priv, int budget, u32 tx_intr,
+ 	u32 idx, hwidx;
+ 	struct fe_tx_ring *ring = &priv->tx_ring;
+ 
++	fe_reg_w32(tx_intr, FE_REG_FE_INT_STATUS);
++
+ 	idx = ring->tx_free_idx;
+ 	hwidx = fe_reg_r32(FE_REG_TX_DTX_IDX0);
+ 
+@@ -928,14 +948,7 @@ static int fe_poll_tx(struct fe_priv *priv, int budget, u32 tx_intr,
  	}
  	ring->tx_free_idx = idx;
  
@@ -330,7 +338,7 @@ index 8c71a92f..7da348a8 100644
  		*tx_again = 1;
  	}
  
-@@ -958,6 +967,11 @@ static int fe_poll(struct napi_struct *napi, int budget)
+@@ -958,6 +971,11 @@ static int fe_poll(struct napi_struct *napi, int budget)
  	u32 status, fe_status, status_reg, mask;
  	u32 tx_intr, rx_intr, status_intr;
  
@@ -342,7 +350,7 @@ index 8c71a92f..7da348a8 100644
  	status = fe_reg_r32(FE_REG_FE_INT_STATUS);
  	fe_status = status;
  	tx_intr = priv->soc->tx_int;
-@@ -967,6 +981,10 @@ static int fe_poll(struct napi_struct *napi, int budget)
+@@ -967,6 +985,10 @@ static int fe_poll(struct napi_struct *napi, int budget)
  	rx_done = 0;
  	tx_again = 0;
  
@@ -353,7 +361,7 @@ index 8c71a92f..7da348a8 100644
  	if (fe_reg_table[FE_REG_FE_INT_STATUS2]) {
  		fe_status = fe_reg_r32(FE_REG_FE_INT_STATUS2);
  		status_reg = FE_REG_FE_INT_STATUS2;
-@@ -974,11 +992,15 @@ static int fe_poll(struct napi_struct *napi, int budget)
+@@ -974,11 +996,15 @@ static int fe_poll(struct napi_struct *napi, int budget)
  		status_reg = FE_REG_FE_INT_STATUS;
  	}
  
@@ -373,7 +381,7 @@ index 8c71a92f..7da348a8 100644
  
  	if (unlikely(fe_status & status_intr)) {
  		if (hwstat && spin_trylock(&hwstat->stats_lock)) {
-@@ -996,20 +1018,22 @@ static int fe_poll(struct napi_struct *napi, int budget)
+@@ -996,20 +1022,22 @@ static int fe_poll(struct napi_struct *napi, int budget)
  	}
  
  	if (!tx_again && (rx_done < budget)) {
@@ -405,7 +413,7 @@ index 8c71a92f..7da348a8 100644
  	return rx_done;
  }
  
-@@ -1157,7 +1181,8 @@ static int fe_hw_init(struct net_device *dev)
+@@ -1157,7 +1185,8 @@ static int fe_hw_init(struct net_device *dev)
  	/* disable delay interrupt */
  	fe_reg_w32(0, FE_REG_DLY_INT_CFG);
  
@@ -415,7 +423,7 @@ index 8c71a92f..7da348a8 100644
  
  	/* frame engine will push VLAN tag regarding to VIDX feild in Tx desc */
  	if (fe_reg_table[FE_REG_FE_DMA_VID_BASE])
-@@ -1180,25 +1205,6 @@ static int fe_hw_init(struct net_device *dev)
+@@ -1180,25 +1209,6 @@ static int fe_hw_init(struct net_device *dev)
  static int fe_open(struct net_device *dev)
  {
  	struct fe_priv *priv = netdev_priv(dev);
@@ -441,7 +449,7 @@ index 8c71a92f..7da348a8 100644
  
  	if (priv->phy)
  		priv->phy->start(priv);
-@@ -1206,6 +1212,8 @@ static int fe_open(struct net_device *dev)
+@@ -1206,6 +1216,8 @@ static int fe_open(struct net_device *dev)
  	if (priv->soc->has_carrier && priv->soc->has_carrier(priv))
  		netif_carrier_on(dev);
  
@@ -450,7 +458,7 @@ index 8c71a92f..7da348a8 100644
  	napi_enable(&priv->rx_napi);
  	fe_int_enable(priv->soc->tx_int | priv->soc->rx_int);
  	netif_start_queue(dev);
-@@ -1216,9 +1224,10 @@ static int fe_open(struct net_device *dev)
+@@ -1216,9 +1228,10 @@ static int fe_open(struct net_device *dev)
  static int fe_stop(struct net_device *dev)
  {
  	struct fe_priv *priv = netdev_priv(dev);
@@ -462,7 +470,7 @@ index 8c71a92f..7da348a8 100644
  	netif_tx_disable(dev);
  	fe_int_disable(priv->soc->tx_int | priv->soc->rx_int);
  	napi_disable(&priv->rx_napi);
-@@ -1226,13 +1235,6 @@ static int fe_stop(struct net_device *dev)
+@@ -1226,13 +1239,6 @@ static int fe_stop(struct net_device *dev)
  	if (priv->phy)
  		priv->phy->stop(priv);
  
@@ -476,7 +484,7 @@ index 8c71a92f..7da348a8 100644
  	/* wait dma stop */
  	for (i = 0; i < 10; i++) {
  		if (fe_reg_r32(FE_REG_PDMA_GLO_CFG) &
-@@ -1243,8 +1245,6 @@ static int fe_stop(struct net_device *dev)
+@@ -1243,8 +1249,6 @@ static int fe_stop(struct net_device *dev)
  		break;
  	}
  
@@ -485,7 +493,7 @@ index 8c71a92f..7da348a8 100644
  	return 0;
  }
  
-@@ -1253,6 +1253,8 @@ static int __init fe_init(struct net_device *dev)
+@@ -1253,6 +1257,8 @@ static int __init fe_init(struct net_device *dev)
  	struct fe_priv *priv = netdev_priv(dev);
  	struct device_node *port;
  	const char *mac_addr;
@@ -494,7 +502,7 @@ index 8c71a92f..7da348a8 100644
  	int err;
  
  	priv->soc->reset_fe();
-@@ -1297,6 +1299,21 @@ static int __init fe_init(struct net_device *dev)
+@@ -1297,6 +1303,21 @@ static int __init fe_init(struct net_device *dev)
  	if ((priv->flags & FE_FLAG_HAS_SWITCH) && priv->soc->switch_config)
  		priv->soc->switch_config(priv);
  
@@ -516,7 +524,7 @@ index 8c71a92f..7da348a8 100644
  	return 0;
  
  err_phy_disconnect:
-@@ -1309,8 +1326,16 @@ err_phy_disconnect:
+@@ -1309,8 +1330,16 @@ err_phy_disconnect:
  
  static void fe_uninit(struct net_device *dev)
  {
@@ -533,7 +541,7 @@ index 8c71a92f..7da348a8 100644
  	if (priv->phy)
  		priv->phy->disconnect(priv);
  	fe_mdio_cleanup(priv);
-@@ -1467,7 +1492,7 @@ static int fe_probe(struct platform_device *pdev)
+@@ -1467,7 +1496,7 @@ static int fe_probe(struct platform_device *pdev)
  		soc->reg_table = fe_reg_table;
  
  	fe_base = devm_ioremap_resource(&pdev->dev, res);
@@ -542,7 +550,7 @@ index 8c71a92f..7da348a8 100644
  		err = -EADDRNOTAVAIL;
  		goto err_out;
  	}
-@@ -1535,6 +1560,7 @@ static int fe_probe(struct platform_device *pdev)
+@@ -1535,6 +1564,7 @@ static int fe_probe(struct platform_device *pdev)
  	priv->tx_ring.tx_ring_size = NUM_DMA_DESC;
  	priv->rx_ring.rx_ring_size = NUM_DMA_DESC;
  	INIT_WORK(&priv->pending_work, fe_pending_work);
@@ -550,8 +558,6 @@ index 8c71a92f..7da348a8 100644
  
  	napi_weight = 32;
  	if (priv->flags & FE_FLAG_NAPI_WEIGHT) {
-diff --git a/drivers/net/ethernet/mediatek/mtk_eth_soc.h b/drivers/net/ethernet/mediatek/mtk_eth_soc.h
-index 05f550fa..42cc9d86 100644
 --- a/drivers/net/ethernet/mediatek/mtk_eth_soc.h
 +++ b/drivers/net/ethernet/mediatek/mtk_eth_soc.h
 @@ -461,6 +461,7 @@ struct fe_tx_ring {
